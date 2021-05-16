@@ -75,16 +75,7 @@ class ToDoItemsTableViewController: UITableViewController {
         items[indexPath.row].isDone.toggle()
         coreDataManager.saveContext()
         
-        deleteRow(with: indexPath)
-        
         tableView.reloadData()
         
-    }
-    
-    func deleteRow(with indexPath: IndexPath) {
-        if showIsDone && items[indexPath.row].isDone {
-            items.remove(at: indexPath.row)
-            tableView.deleteRows(at: [indexPath], with: .automatic)
-        }
     }
 }
