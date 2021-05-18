@@ -70,12 +70,52 @@ class ToDoItemsTableViewController: UITableViewController {
         return cell
     }
     
+    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        UISwipeActionsConfiguration(actions: [deleteItemAction(at: indexPath)])
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        UISwipeActionsConfiguration(actions: [doneItemAAction(at: indexPath)])
+    }
+    
+    private func doneItemAAction(at indexPath: IndexPath) -> UIContextualAction {
+        let action = UIContextualAction(style: .normal, title: "Done") { _, _, complition in
+            self.items[indexPath.row].isDone.toggle()
+            
+            if self.showIsDone && !self.items[indexPath.row].isDone  {
+                self.deleteItemRow(with: indexPath)
+            } else {
+                self.tableView.reloadRows(at: [indexPath], with: .automatic)
+            }
+            
+            self.coreDataManager.saveContext()
+            complition(true)
+        }
+        action.backgroundColor = .systemGreen
+        action.image = UIImage(systemName: "checkmark.circle")
+        return action
+    }
+    
+    private func deleteItemAction(at indexPath: IndexPath) -> UIContextualAction {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { _, _, complition in
+            self.coreDataManager.deleteObject(with: self.items[indexPath.row])
+            self.deleteItemRow(with: indexPath)
+        }
+        action.backgroundColor = .red
+        action.image = UIImage(systemName: "delete.right")
+        return action
+    }
+    
+    private func deleteItemRow(with indexPath: IndexPath) {
+        items.remove(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+    }
+    
     //MARK: - Table view delegate
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        items[indexPath.row].isDone.toggle()
-        coreDataManager.saveContext()
+        tableView.deselectRow(at: indexPath, animated: true)
         
-        tableView.reloadData()
+//        tableView.reloadData()
         
     }
 }

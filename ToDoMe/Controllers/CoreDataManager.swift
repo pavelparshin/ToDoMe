@@ -88,4 +88,9 @@ struct CoreDataManager {
     func numberOfAllItems() -> Int {
         loadItems().count
     }
+    
+    func deleteObject(with object: NSManagedObject) {
+        context.delete(object)
+        saveContext()
+    }
 }
