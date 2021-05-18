@@ -15,15 +15,18 @@ struct AlertController {
         let alert = UIAlertController(title: title, message: "", preferredStyle: .alert)
         alert.addTextField { textField in
             textField.placeholder = "\(title) here"
+            textField.tintColor = K.shared.doneColor
         }
         
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel)
+        cancelAction.setValue(K.shared.deleteColor, forKey: "titleTextColor")
         alert.addAction(cancelAction)
         
         let action = UIAlertAction(title: "Add", style: .default) { action in
             guard let newCategoryTF = alert.textFields?.first?.text, newCategoryTF != "" else { return }
             complition(newCategoryTF)
         }
+        action.setValue(K.shared.doneColor, forKey: "titleTextColor")
         
         alert.addAction(action)
         view.present(alert, animated: true)
