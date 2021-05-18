@@ -19,20 +19,7 @@ class ToDoItemsTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        title = selectedCategory?.name
-        
-        if let selectedCategory = selectedCategory {
-            title = selectedCategory.name
-            items = coreDataManager.loadItemsFromCategory(category: selectedCategory)
-        } else if !showIsDone {
-            title = "All items"
-            items = coreDataManager.loadItems()
-            navigationItem.rightBarButtonItem?.isEnabled = false
-        } else {
-            title = "All Done items"
-            items = coreDataManager.loadDoneItems()
-            navigationItem.rightBarButtonItem?.isEnabled = false
-        }
+        setUI()
     }
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -47,37 +34,29 @@ class ToDoItemsTableViewController: UITableViewController {
         tableView.reloadData()
     }
     
-    // MARK: - Table view data source
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        items.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "toDoItemCell", for: indexPath)
-        let item = items[indexPath.row]
+    //MARK: SetUp User Interface
+    private func setUI() {
         
-        cell.textLabel?.text = item.title
-        
-        if item.isDone {
-            cell.textLabel?.textColor = .gray
-            cell.accessoryType = .checkmark
+        if let selectedCategory = selectedCategory {
+            title = selectedCategory.name
+            items = coreDataManager.loadItemsFromCategory(category: selectedCategory)
+        } else if !showIsDone {
+            title = "All items"
+            items = coreDataManager.loadItems()
+            navigationItem.rightBarButtonItem?.isEnabled = false
         } else {
-            cell.textLabel?.textColor = .black
-            cell.accessoryType = .none
+            title = "All Done items"
+            items = coreDataManager.loadDoneItems()
+            navigationItem.rightBarButtonItem?.isEnabled = false
         }
         
-        return cell
+        view.backgroundColor = K.shared.lightColour
+        tableView.backgroundColor = K.shared.lightColour
+        navigationController?.navigationBar.tintColor = K.shared.doneColor
+        navigationItem.rightBarButtonItem?.tintColor = K.shared.doneColor
     }
     
-    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        UISwipeActionsConfiguration(actions: [deleteItemAction(at: indexPath)])
-    }
-    
-    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        UISwipeActionsConfiguration(actions: [doneItemAAction(at: indexPath)])
-    }
-    
+    //MARK: work with UISwipeActionsConfiguration
     private func doneItemAAction(at indexPath: IndexPath) -> UIContextualAction {
         let action = UIContextualAction(style: .normal, title: "Done") { _, _, complition in
             self.items[indexPath.row].isDone.toggle()
@@ -91,8 +70,8 @@ class ToDoItemsTableViewController: UITableViewController {
             self.coreDataManager.saveContext()
             complition(true)
         }
-        action.backgroundColor = .systemGreen
-        action.image = UIImage(systemName: "checkmark.circle")
+        action.backgroundColor = K.shared.doneColor
+        action.image = UIImage(systemName: K.shared.checkmarkDone)
         return action
     }
     
@@ -101,8 +80,8 @@ class ToDoItemsTableViewController: UITableViewController {
             self.coreDataManager.deleteObject(with: self.items[indexPath.row])
             self.deleteItemRow(with: indexPath)
         }
-        action.backgroundColor = .red
-        action.image = UIImage(systemName: "delete.right")
+        action.backgroundColor = K.shared.deleteColor
+        action.image = UIImage(systemName: K.shared.deleteMark)
         return action
     }
     
@@ -111,11 +90,49 @@ class ToDoItemsTableViewController: UITableViewController {
         tableView.deleteRows(at: [indexPath], with: .automatic)
     }
     
+    // MARK: - Table view data source
+    
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        items.count
+    }
+    
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "toDoItemCell", for: indexPath)
+        
+        let item = items[indexPath.row]
+        cell.textLabel?.text = item.title
+        
+        if selectedCategory == nil {
+            cell.detailTextLabel?.text = item.parentCategory?.name
+            cell.detailTextLabel?.textColor = .gray
+        } else {
+            cell.detailTextLabel?.text = nil
+        }
+        
+        if item.isDone {
+            cell.textLabel?.textColor = .gray
+            cell.accessoryType = .checkmark
+            cell.tintColor = K.shared.doneColor
+        } else {
+            cell.textLabel?.textColor = .black
+            cell.accessoryType = .none
+        }
+        
+        cell.backgroundColor = K.shared.lightColour
+        return cell
+    }
+    
     //MARK: - Table view delegate
+    
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        
-//        tableView.reloadData()
-        
+    }
+    
+    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        UISwipeActionsConfiguration(actions: [doneItemAAction(at: indexPath)])
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        UISwipeActionsConfiguration(actions: [deleteItemAction(at: indexPath)])
     }
 }

@@ -8,7 +8,7 @@
 import UIKit
 
 class MainPageViewController: UIViewController {
-
+    
     @IBOutlet var allItemButton: UIButton!
     @IBOutlet var doneItemsButton: UIButton!
     @IBOutlet var categoryTableView: UITableView!
@@ -28,19 +28,24 @@ class MainPageViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
-        let allItems = "All Items: \(coreDataManager.numberOfAllItems())"
-        allItemButton.setTitle(allItems, for: .normal)
-        
-        let doneItems = "Done items: \(coreDataManager.numberOfDoneItems())"
-        doneItemsButton.setTitle(doneItems, for: .normal)
-        
+        setUI()
         categoryTableView.reloadData()
     }
-
-    @IBAction func allItemsButtonPressed(_ sender: UIButton) {
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        allItemButton.layer.cornerRadius = allItemButton.frame.width / 2
+        doneItemsButton.layer.cornerRadius = doneItemsButton.frame.width / 2
     }
     
-    @IBAction func doneItemsButtonPressed(_ sender: UIButton) {
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let toDoItemsTV = segue.destination as! ToDoItemsTableViewController
+        
+        if segue.identifier == "showItems" {
+            toDoItemsTV.selectedCategory = sender as? Category
+        } else if segue.identifier == "showDoneItemsSegue" {
+            toDoItemsTV.showIsDone = true
+        }
     }
     
     @IBAction func newCategoryPressed(_ sender: UIBarButtonItem) {
@@ -55,14 +60,34 @@ class MainPageViewController: UIViewController {
         categoryTableView.reloadData()
     }
     
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let toDoItemsTV = segue.destination as! ToDoItemsTableViewController
+    private func setUI() {
+        allItemButton.setTitle("\(coreDataManager.numberOfAllItems())", for: .normal)
+        allItemButton.setTitleColor(K.shared.lightColour, for: .normal)
+        allItemButton.backgroundColor = K.shared.allItemsColour
         
-        if segue.identifier == "showItems" {
-            toDoItemsTV.selectedCategory = sender as? Category
-        } else if segue.identifier == "showDoneItemsSegue" {
-            toDoItemsTV.showIsDone = true
+        doneItemsButton.setTitle("\(coreDataManager.numberOfDoneItems())", for: .normal)
+        doneItemsButton.setTitleColor(K.shared.lightColour, for: .normal)
+        doneItemsButton.backgroundColor = K.shared.doneColor
+        
+        view.backgroundColor = K.shared.lightColour
+        categoryTableView.backgroundColor = K.shared.lightColour
+        navigationItem.rightBarButtonItem?.tintColor = K.shared.doneColor
+    }
+    
+    private func deleteCategoryAction(at indexPath: IndexPath) -> UIContextualAction {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { _, _, complition in
+            self.coreDataManager.deleteAllItems(in: self.categories[indexPath.row])
+            self.deleteCategoryRow(with: indexPath)
         }
+        action.backgroundColor = K.shared.deleteColor
+        action.image = UIImage(systemName: K.shared.deleteMark)
+        
+        return action
+    }
+    
+    private func deleteCategoryRow(with indexPath: IndexPath) {
+        categories.remove(at: indexPath.row)
+        categoryTableView.deleteRows(at: [indexPath], with: .automatic)
     }
 }
 
@@ -75,6 +100,7 @@ extension MainPageViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
+        cell.backgroundColor = K.shared.lightColour
         let category = categories[indexPath.row]
         
         cell.textLabel?.text = category.name
@@ -87,12 +113,22 @@ extension MainPageViewController: UITableViewDataSource {
         
         return cell
     }
+    
 }
 
+//MARK: - UITableViewDelegate
 extension MainPageViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "showItems", sender: categories[indexPath.row])
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        UISwipeActionsConfiguration(actions: [deleteCategoryAction(at: indexPath)])
+    }
+    
+    func tableView(_ tableView: UITableView, didEndEditingRowAt indexPath: IndexPath?) {
+        viewWillAppear(true)
     }
 }
 

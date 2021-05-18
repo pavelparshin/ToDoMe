@@ -22,6 +22,11 @@ struct CoreDataManager {
         }
     }
     
+    func deleteObject(with object: NSManagedObject) {
+        context.delete(object)
+        saveContext()
+    }
+    
     //MARK: - Work with Categories
     func newCategory(name: String) -> Category {
         let newCategory = Category(context: context)
@@ -41,7 +46,25 @@ struct CoreDataManager {
         }
     }
     
+    func deleteAllItems(in category: Category) {
+        let items = loadItems(predicate: NSPredicate(format: "parentCategory.name MATCHES %@", category.name!))
+        for item in items {
+            deleteObject(with: item)
+        }
+        deleteObject(with: category)
+    }
+    
     //MARK: - Work with ToDo Items
+    
+    func createItem(with title: String, from category: Category) -> Item {
+        let newItem = Item(context: context)
+        newItem.title = title
+        newItem.parentCategory = category
+        saveContext()
+        
+        return newItem
+    }
+    
     func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) -> [Item] {
         if let predicate = predicate {
             request.predicate = predicate
@@ -55,13 +78,9 @@ struct CoreDataManager {
         }
     }
     
-    func createItem(with title: String, from category: Category) -> Item {
-        let newItem = Item(context: context)
-        newItem.title = title
-        newItem.parentCategory = category
-        saveContext()
-        
-        return newItem
+    func loadDoneItems() -> [Item] {
+        let predicate = NSPredicate(format: "isDone == YES", true)
+        return loadItems(predicate: predicate)
     }
     
     func loadItemsFromCategory(category: Category) -> [Item] {
@@ -76,21 +95,11 @@ struct CoreDataManager {
         return loadItemsFromCategory(category: category).count
     }
     
-    func loadDoneItems() -> [Item] {
-        let predicate = NSPredicate(format: "isDone == YES", true)
-        return loadItems(predicate: predicate)
-    }
-    
     func numberOfDoneItems() -> Int {
         loadDoneItems().count
     }
 
     func numberOfAllItems() -> Int {
         loadItems().count
-    }
-    
-    func deleteObject(with object: NSManagedObject) {
-        context.delete(object)
-        saveContext()
     }
 }
