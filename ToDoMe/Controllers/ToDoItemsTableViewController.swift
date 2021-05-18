@@ -98,8 +98,8 @@ class ToDoItemsTableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "toDoItemCell", for: indexPath)
-        
         let item = items[indexPath.row]
+        
         cell.textLabel?.text = item.title
         
         if selectedCategory == nil {
@@ -118,6 +118,7 @@ class ToDoItemsTableViewController: UITableViewController {
             cell.accessoryType = .none
         }
         
+        cell.selectedBackgroundView = K.shared.getColorForCell()
         cell.backgroundColor = K.shared.lightColour
         return cell
     }

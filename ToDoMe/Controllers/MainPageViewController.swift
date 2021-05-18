@@ -63,7 +63,7 @@ class MainPageViewController: UIViewController {
     private func setUI() {
         allItemButton.setTitle("\(coreDataManager.numberOfAllItems())", for: .normal)
         allItemButton.setTitleColor(K.shared.lightColour, for: .normal)
-        allItemButton.backgroundColor = K.shared.allItemsColour
+        allItemButton.backgroundColor = K.shared.lightDoneColour
         
         doneItemsButton.setTitle("\(coreDataManager.numberOfDoneItems())", for: .normal)
         doneItemsButton.setTitleColor(K.shared.lightColour, for: .normal)
@@ -100,7 +100,6 @@ extension MainPageViewController: UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-        cell.backgroundColor = K.shared.lightColour
         let category = categories[indexPath.row]
         
         cell.textLabel?.text = category.name
@@ -110,6 +109,9 @@ extension MainPageViewController: UITableViewDataSource {
         } else {
             cell.detailTextLabel?.text = ""
         }
+        
+        cell.backgroundColor = K.shared.lightColour
+        cell.selectedBackgroundView = K.shared.getColorForCell()
         
         return cell
     }
